@@ -1,23 +1,20 @@
-import { Options } from "@mikro-orm/core"
-import { SqlHighlighter } from "@mikro-orm/sql-highlighter"
+import { Options } from '@mikro-orm/core'
+import { SqlHighlighter } from '@mikro-orm/sql-highlighter'
 
 export const databaseConfig: DatabaseConfigType = {
-    
     path: './database/', // path to the folder containing the migrations and SQLite database (if used)
-    
+
     // config for setting up an automated backup of the database (ONLY FOR SQLITE)
     backup: {
         enabled: false,
-        path: './database/backups/' // path to the backups folder (should be in the database/ folder)
-    }
+        path: './database/backups/', // path to the backups folder (should be in the database/ folder)
+    },
 }
 
-export const databaseType = 'better-sqlite' as const // 'better-sqlite' | 'sqlite' | 'postgres' | 'mysql' | 'mariadb' | 'mongo'
+export const databaseType = 'sqlite' as const // 'better-sqlite' | 'sqlite' | 'postgres' | 'mysql' | 'mariadb' | 'mongo'
 
-const envMikroORMConfig: { production: Options, development?: Options } = {
-
+const envMikroORMConfig: { production: Options; development?: Options } = {
     production: {
-
         /**
          * SQLite
          */
@@ -63,19 +60,21 @@ const envMikroORMConfig: { production: Options, development?: Options } = {
         highlighter: new SqlHighlighter(),
         allowGlobalContext: true,
         debug: false,
-        
+
         migrations: {
             path: './database/migrations',
             emit: 'js',
-            snapshot: true
-        }
+            snapshot: true,
+        },
     },
 
-    development: {
-
-    }
+    development: {},
 }
 
-if (!envMikroORMConfig['development'] || Object.keys(envMikroORMConfig['development']).length === 0) envMikroORMConfig['development'] = envMikroORMConfig['production']
+if (
+    !envMikroORMConfig['development'] ||
+    Object.keys(envMikroORMConfig['development']).length === 0
+)
+    envMikroORMConfig['development'] = envMikroORMConfig['production']
 
 export const mikroORMConfig = envMikroORMConfig

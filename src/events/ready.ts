@@ -1,17 +1,16 @@
-import { ActivityType } from "discord.js"
-import { Client } from "discordx"
-import { injectable } from "tsyringe"
+import { ActivityType } from 'discord.js'
+import { Client } from 'discordx'
+import { injectable } from 'tsyringe'
 
-import { generalConfig, logsConfig } from "@config"
-import { Discord, Once, Schedule } from "@decorators"
-import { Data } from "@entities"
-import { Database, Logger, Scheduler } from "@services"
-import { resolveDependency, syncAllGuilds } from "@utils/functions"
+import { generalConfig, logsConfig } from '@config'
+import { Discord, Once, Schedule } from '@decorators'
+import { Data } from '@entities'
+import { Database, Logger, Scheduler } from '@services'
+import { resolveDependency, syncAllGuilds } from '@utils/functions'
 
 @Discord()
 @injectable()
 export default class ReadyEvent {
-
     constructor(
         private db: Database,
         private logger: Logger,
@@ -22,7 +21,6 @@ export default class ReadyEvent {
 
     @Once('ready')
     async readyHandler([client]: [Client]) {
-
         // make sure all guilds are cached
         await client.guilds.fetch()
 
@@ -31,13 +29,22 @@ export default class ReadyEvent {
             global: {
                 log: logsConfig.debug,
                 disable: {
-                    delete: false
-                }
+                    delete: false,
+                },
             },
             guild: {
-                log: logsConfig.debug
-            }
+                log: logsConfig.debug,
+            },
         })
+        // global: {
+        //     log: logsConfig.debug,
+        //     disable: {
+        //         delete: false,
+        //     },
+        // },
+        // guild: {
+        //     log: logsConfig.debug,
+        // },
 
         // synchronize applications command permissions with Discord
         /**
@@ -66,31 +73,38 @@ export default class ReadyEvent {
 
     @Schedule('*/15 * * * * *') // each 15 seconds
     async changeActivity() {
-        const ActivityTypeEnumString = ["PLAYING", "STREAMING", "LISTENING", "WATCHING", "CUSTOM", "COMPETING"] // DO NOT CHANGE THE ORDER
+        const ActivityTypeEnumString = [
+            'PLAYING',
+            'STREAMING',
+            'LISTENING',
+            'WATCHING',
+            'CUSTOM',
+            'COMPETING',
+        ] // DO NOT CHANGE THE ORDER
 
         const client = await resolveDependency(Client)
         const activity = generalConfig.activities[this.activityIndex]
-        
+
         activity.text = eval(`new String(\`${activity.text}\`).toString()`)
-            
+
         if (activity.type === 'STREAMING') {
             //streaming activity
-            
+
             client.user?.setStatus('online')
             client.user?.setActivity(activity.text, {
-                'url': 'https://www.twitch.tv/discord',
-                'type': ActivityType.Streaming
+                url: 'https://www.twitch.tv/discord',
+                type: ActivityType.Streaming,
             })
         } else {
             //other activities
-            
+
             client.user?.setActivity(activity.text, {
-                type: ActivityTypeEnumString.indexOf(activity.type)
+                type: ActivityTypeEnumString.indexOf(activity.type),
             })
         }
 
         this.activityIndex++
-        if (this.activityIndex === generalConfig.activities.length) this.activityIndex = 0
-
+        if (this.activityIndex === generalConfig.activities.length)
+            this.activityIndex = 0
     }
 }
