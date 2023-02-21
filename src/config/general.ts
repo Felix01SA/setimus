@@ -2,12 +2,12 @@ export const generalConfig: GeneralConfigType = {
     // do not touch that
     __templateVersion: '2.0.0',
 
-    name: 'tscord', // the name of your bot
+    name: 'Setimus', // the name of your bot
     description: '', // the description of your bot
-    defaultLocale: 'en', // default language of the bot, must be a valid locale
+    defaultLocale: 'pt-BR', // default language of the bot, must be a valid locale
     simpleCommandsPrefix: '!', // default prefix for simple command messages (old way to do commands on discord)
     ownerId: process.env['BOT_OWNER_ID'] || '',
-    timezone: 'Europe/Paris', // default TimeZone to well format and localize dates (logs, stats, etc)
+    timezone: 'America/Sao_Paulo', // default TimeZone to well format and localize dates (logs, stats, etc)
 
     // useful links
     links: {
@@ -28,11 +28,11 @@ export const generalConfig: GeneralConfigType = {
     // define the bot activities (phrases under its name). Types can be: PLAYING, LISTENING, WATCHING, STREAMING
     activities: [
         {
-            text: 'discord.js v14',
+            text: 'Recrutamento ON',
             type: 'PLAYING',
         },
         {
-            text: 'some knowledge',
+            text: 'SETIMUS',
             type: 'STREAMING',
         },
     ],
