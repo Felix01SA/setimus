@@ -5,8 +5,7 @@ import { Guild, User } from '@entities'
 import { Database, Logger, Stats } from '@services'
 import { resolveDependencies, resolveDependency } from '@utils/functions'
 import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@utils/functions'
 
 /**
  * Add a active user to the database if doesn't exist.
@@ -19,24 +18,43 @@ export const syncUser = async (user: DUser) => {
         Logger,
     ])
 
-    const userRepo = db.get(User)
+    // const userRepo = db.get(User)
 
-    const userData = await userRepo.findOne({
-        id: user.id,
-    })
+    // const userData = await userRepo.findOne({
+    //     id: user.id,
+    // })
 
-    if (!userData) {
-        // add user to the db
-        const newUser = new User()
-        newUser.id = user.id
-        await userRepo.persistAndFlush(newUser)
+    // if (!userData) {
+    //     // add user to the db
+    //     const newUser = new User()
+    //     newUser.id = user.id
+    //     await userRepo.persistAndFlush(newUser)
 
-        // record new user both in logs and stats
-        stats.register('NEW_USER', user.id)
-        logger.logNewUser(user)
-    }
+    //     // record new user both in logs and stats
+    //     stats.register('NEW_USER', user.id)
+    //     logger.logNewUser(user)
+    // }
 
     // using prisma
+
+    const userDB = await prisma.user.findUnique({
+        where: {
+            id: user.id,
+        },
+    })
+
+    if (!userDB) {
+        await prisma.user
+            .create({
+                data: {
+                    id: user.id,
+                },
+            })
+            .then(() => {
+                stats.register('NEW_USER', user.id)
+                logger.logNewUser(user)
+            })
+    }
 }
 
 /**
