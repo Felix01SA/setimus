@@ -1,12 +1,13 @@
 import { ActivityType } from 'discord.js'
 import { Client } from 'discordx'
 import { injectable } from 'tsyringe'
+import { subDays } from 'date-fns'
 
 import { generalConfig, logsConfig } from '@config'
 import { Discord, Once, Schedule } from '@decorators'
 import { Data } from '@entities'
 import { Database, Logger, Scheduler } from '@services'
-import { resolveDependency, syncAllGuilds } from '@utils/functions'
+import { prisma, resolveDependency, syncAllGuilds } from '@utils/functions'
 
 @Discord()
 @injectable()
@@ -36,15 +37,6 @@ export default class ReadyEvent {
                 log: logsConfig.debug,
             },
         })
-        // global: {
-        //     log: logsConfig.debug,
-        //     disable: {
-        //         delete: false,
-        //     },
-        // },
-        // guild: {
-        //     log: logsConfig.debug,
-        // },
 
         // synchronize applications command permissions with Discord
         /**
@@ -57,6 +49,9 @@ export default class ReadyEvent {
 
         // change activity
         await this.changeActivity()
+
+        // delete forms
+        await this.removeForms()
 
         // update last startup time in the database
         await this.db.get(Data).set('lastStartup', Date.now())
@@ -106,5 +101,17 @@ export default class ReadyEvent {
         this.activityIndex++
         if (this.activityIndex === generalConfig.activities.length)
             this.activityIndex = 0
+    }
+
+    @Schedule('*/30 * * * * *')
+    async removeForms() {
+        const forms = await prisma.forms.findMany()
+
+        const date = subDays(new Date(), 7)
+
+        for (const form of forms) {
+            if (form.createdAt <= date)
+                await prisma.forms.delete({ where: { id: form.id } })
+        }
     }
 }
