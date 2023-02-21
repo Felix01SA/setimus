@@ -10,6 +10,7 @@ build/
 
 # db
 *.sqlite
+*.db
 objects/
 snapshot*.txt
 /data/
