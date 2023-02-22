@@ -11,7 +11,7 @@ build/
 # db
 *.sqlite
 prisma/*.db
-prisma/migrations/
+prisma/migrations
 objects/
 snapshot*.txt
 /data/
