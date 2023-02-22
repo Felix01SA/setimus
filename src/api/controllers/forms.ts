@@ -1,4 +1,11 @@
-import { Controller, Get, Post, BodyParams, PathParams } from '@tsed/common'
+import {
+    Controller,
+    Get,
+    Post,
+    BodyParams,
+    PathParams,
+    Res,
+} from '@tsed/common'
 
 import { BaseController } from '@utils/classes'
 import { resolveDependency } from '@utils/functions'
@@ -14,6 +21,8 @@ import {
 import { ButtonComponent, Client, Discord } from 'discordx'
 import { addDays } from 'date-fns'
 import { prisma } from '@utils/functions'
+import { Returns } from '@tsed/schema'
+import { Unauthorized } from '@tsed/exceptions'
 
 @Controller('/forms')
 @Discord()
@@ -28,6 +37,7 @@ export class FormsController extends BaseController {
         })
     }
 
+    @Returns(401, Unauthorized)
     @Post('/create')
     async store(
         @BodyParams()
@@ -41,11 +51,11 @@ export class FormsController extends BaseController {
         }: BodyProps
     ) {
         const existsForm = await prisma.forms.findUnique({
-            where: { discordTag: discordTag! },
+            where: { discordTag },
         })
 
         if (existsForm)
-            return { type: 'error', message: 'Usuário já cadastrado' }
+            throw new Unauthorized('UID ou Discord Tag já cadastradas')
 
         const form = await prisma.forms.create({
             data: {
@@ -175,6 +185,13 @@ export class FormsController extends BaseController {
         let recruiterId = '',
             recruteTag = ''
 
+        const guild = await prisma.guild.findUnique({
+            where: { id: interaction.guild?.id },
+            select: {
+                memberRole: true,
+            },
+        })
+
         const messageEmbed = new EmbedBuilder()
             .setAuthor({
                 name: member.username,
@@ -219,9 +236,12 @@ export class FormsController extends BaseController {
         const recrute = interaction.guild?.members.cache.find(
             (member) => member.user.tag === recruteTag
         )
-        recrute
-            ? await recrute?.send({ embeds: [messageEmbed.setFields([])] })
-            : null
+        const role = interaction.guild?.roles.cache.get(guild?.memberRole!)
+
+        if (recrute) {
+            await recrute?.send({ embeds: [messageEmbed.setFields([])] })
+            recrute.roles.add(role!)
+        }
     }
 
     @ButtonComponent({ id: 'reproved' })

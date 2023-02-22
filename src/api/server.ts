@@ -1,25 +1,25 @@
-import { Inject, PlatformAcceptMimesMiddleware, PlatformApplication } from "@tsed/common"
-import { PlatformExpress } from "@tsed/platform-express"
+import {
+    Inject,
+    PlatformAcceptMimesMiddleware,
+    PlatformApplication,
+} from '@tsed/common'
+import { PlatformExpress } from '@tsed/platform-express'
 import '@tsed/swagger'
-import { singleton } from "tsyringe"
+import { singleton } from 'tsyringe'
+import cors from 'cors'
 
-import * as controllers from "@api/controllers"
-import { Log } from "@api/middlewares"
-import { PluginsManager } from "@services"
+import * as controllers from '@api/controllers'
+import { Log } from '@api/middlewares'
+import { PluginsManager } from '@services'
 
 @singleton()
 export class Server {
-
     @Inject() app: PlatformApplication
 
-    constructor(
-        private readonly pluginsManager: PluginsManager
-    ) {}
+    constructor(private readonly pluginsManager: PluginsManager) {}
 
     $beforeRoutesInit() {
-        this.app
-            .use(Log)
-            .use(PlatformAcceptMimesMiddleware)
+        this.app.use(Log).use(PlatformAcceptMimesMiddleware).use(cors())
 
         return null
     }
@@ -31,19 +31,22 @@ export class Server {
             httpsPort: false,
             acceptMimes: ['application/json'],
             mount: {
-                '/': [...Object.values(controllers), ...this.pluginsManager.getControllers()]
+                '/': [
+                    ...Object.values(controllers),
+                    ...this.pluginsManager.getControllers(),
+                ],
             },
             swagger: [
                 {
                     path: '/docs',
-                    specVersion: '3.0.1'
-                }
+                    specVersion: '3.0.1',
+                },
             ],
             logger: {
                 level: 'warn',
                 logRequest: false,
-                disableRoutesSummary: true
-            }
+                disableRoutesSummary: true,
+            },
         })
 
         await platform.listen()
