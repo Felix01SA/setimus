@@ -29,9 +29,24 @@ model guild {
   deleted         Boolean  @default(false)
   lastInteraction DateTime @default(now())
   formsChannel    String?
+  memberRole      String?
+  createdAt       DateTime @default(now())
 }
 
 model user {
   id              String   @id @unique
   lastInteraction DateTime @default(now())
+}
+
+model data {
+  key   String  @id
+  value String?
+}
+
+model stat {
+  id             String   @id @default(cuid())
+  type           String
+  value          String
+  additionalData String?
+  createdAt      DateTime @default(now())
 }
