@@ -8,6 +8,7 @@ import {
     CommandInteraction,
     EmbedBuilder,
     Interaction,
+    Role,
     SelectMenuBuilder,
     SelectMenuInteraction,
 } from 'discord.js'
@@ -41,26 +42,56 @@ export default class ConfigCommand {
             type: ApplicationCommandOptionType.Channel,
         })
         channel: Channel | undefined,
+        @SlashOption({
+            name: 'cargo_membro',
+            type: ApplicationCommandOptionType.Role,
+        })
+        role: Role | undefined,
         interaction: CommandInteraction,
         client: Client,
         { localize }: InteractionData
     ) {
-        if (!channel)
-            return interaction.reply({ content: 'ops', ephemeral: true })
+        const savedGuild = await prisma.guild.findUnique({
+            where: {
+                id: interaction.guild?.id,
+            },
+        })
 
-        await prisma.guild
-            .update({
-                where: { id: interaction.guild?.id },
-                data: {
-                    formsChannel: channel!.id,
-                },
-            })
-            .then((guild) => {
-                interaction.followUp({
-                    content: `Canal de formulários alterado para ${channel} no servidor ${interaction.client.guilds.cache.get(
-                        guild.id
-                    )}`,
+        let message = ``
+        if (channel && role) {
+            message = `Canal de formulários alterado para ${channel} e cargo de membro alterado para ${role} no servidor ${interaction.guild?.name}`
+        } else if (channel) {
+            message = `Canal de formulários alterado para ${channel} no servidor ${interaction.guild?.name}`
+        } else if (role) {
+            message = `Cargo de membro alterado para ${role} no servidor ${interaction.guild?.name}`
+        }
+
+        if (channel || role) {
+            await prisma.guild
+                .update({
+                    where: { id: interaction.guild?.id },
+                    data: {
+                        formsChannel:
+                            channel!.id || savedGuild?.formsChannel || null,
+                        memberRole: role!.id || savedGuild?.memberRole || null,
+                    },
                 })
+                .then(() => {
+                    interaction.followUp({
+                        content: message,
+                    })
+                })
+                .catch(() => {
+                    interaction.followUp({
+                        content: 'Ocorreu um erro ao salvar os dados...',
+                        ephemeral: true,
+                    })
+                })
+        } else {
+            message = `Nenhuma informação provida... Nada alterado`
+            interaction.followUp({
+                content: message,
             })
+        }
     }
 }
