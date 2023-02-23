@@ -41,19 +41,19 @@ export default class ConfigCommand {
             name: 'canal_formularios',
             type: ApplicationCommandOptionType.Channel,
         })
-        channel: Channel | undefined,
+        channel: Channel,
         @SlashOption({
             name: 'cargo_membro',
             type: ApplicationCommandOptionType.Role,
         })
-        role: Role | undefined,
+        role: Role,
         interaction: CommandInteraction,
         client: Client,
         { localize }: InteractionData
     ) {
         const savedGuild = await prisma.guild.findUnique({
             where: {
-                id: interaction.guild?.id,
+                id: interaction.guild?.id!,
             },
         })
 
@@ -69,11 +69,11 @@ export default class ConfigCommand {
         if (channel || role) {
             await prisma.guild
                 .update({
-                    where: { id: interaction.guild?.id },
+                    where: { id: interaction.guild?.id! },
                     data: {
                         formsChannel:
-                            channel!.id || savedGuild?.formsChannel || null,
-                        memberRole: role!.id || savedGuild?.memberRole || null,
+                            channel.id || savedGuild?.formsChannel || null,
+                        memberRole: role.id || savedGuild?.memberRole || null,
                     },
                 })
                 .then(() => {
